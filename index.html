@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Btown Deals Database</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+
+        :root {
+            --bg-color: #f4f0ea;       
+            --text-main: #111111;      
+            --border-color: #111111;
+            --card-white: #ffffff;     
+
+            --neon-pink:   #ff85a2;
+            --neon-green:  #00e676;
+            --neon-purple: #b185ff;
+            --neon-yellow: #ffde59;
+            --neon-blue:   #4dd0e1;
+            --neon-orange: #ff9e5e;
+
+            --bg-dark: #111111;  
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #111111; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100dvh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* UTILITY CLASSES */
+        .bg-pink   { background-color: var(--neon-pink); }
+        .bg-green  { background-color: var(--neon-green); }
+        .bg-purple { background-color: var(--neon-purple); }
+        .bg-yellow { background-color: var(--neon-yellow); }
+        .bg-blue   { background-color: var(--neon-blue); }
+        .bg-orange { background-color: var(--neon-orange); }
+        .bg-dark   { background-color: var(--bg-dark); color: #f4f0ea; }
+
+        h1, h2, h3, p { margin: 0; }
+        a { color: inherit; text-decoration: none; }
+
+        /* PROGRESS BAR */
+        #progress-container {
+            display: flex;
+            gap: 4px;
+            padding: 16px 20px 0;
+            z-index: 10;
+        }
+
+        .progress-bar-wrapper {
+            flex: 1;
+            height: 4px;
+            background: rgba(17,17,17,0.15);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--text-main);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* SLIDES */
+        .slides-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            overflow-y: auto;
+            padding: 24px 20px 100px;
+            transition: opacity 0.15s ease-in-out;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .slide-header {
+            margin-bottom: 24px;
+        }
+
+        /* ROADMAP BREADCRUMBS */
+        .roadmap {
+            font-size: 0.55rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .roadmap span {
+            opacity: 0.4;
+        }
+
+        .roadmap span.active {
+            opacity: 1;
+            color: var(--neon-blue);
+            background: var(--text-main);
+            padding: 3px 6px;
+            border-radius: 6px;
+        }
+
+        .roadmap-arrow {
+            opacity: 0.3 !important;
+            font-weight: 900;
+        }
+
+        .slide-header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            line-height: 0.95;
+            margin-bottom: 6px;
+        }
+
+        .slide-header p {
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0.78;
+        }
+
+        .day-header {
+            font-size: 1.25rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin: 28px 0 12px;
+            border-bottom: 3px solid var(--border-color);
+            padding-bottom: 4px;
+            letter-spacing: -0.02em;
+        }
+
+        /* CARDS */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding-bottom: 24px;
+        }
+
+        .card {
+            background-color: var(--card-white);
+            border: 3px solid var(--border-color);
+            border-radius: 18px;
+            padding: 16px;
+            color: var(--text-main);
+            box-shadow: 4px 4px 0px rgba(17,17,17,1);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 116px;
+            position: relative;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        a.card:active {
+            transform: translate(3px, 3px);
+            box-shadow: 1px 1px 0px rgba(17,17,17,1);
+        }
+
+        .card .emoji {
+            font-size: 1.75rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .card h3 {
+            font-size: 1.05rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+        }
+
+        .card p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0.85;
+            line-height: 1.45;
+        }
+
+        .card.span-2 {
+            grid-column: span 2;
+            min-height: 98px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .card.span-2.row-layout {
+            flex-direction: row;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .card.span-2.row-layout .emoji {
+            font-size: 2.1rem;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+
+        /* PILLS */
+        .pill-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-bottom: 12px;
+        }
+
+        .pill {
+            background-color: var(--card-white);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            box-shadow: 2px 2px 0px rgba(17,17,17,1);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1 1 calc(50% - 8px); /* Two columns where possible */
+            min-width: 140px;
+        }
+
+        .pill.full-width {
+            flex: 1 1 100%;
+        }
+
+        .pill-handle { 
+            font-size: 0.85rem; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            line-height: 1.1;
+            margin-bottom: 2px;
+        }
+
+        .pill-desc { 
+            font-size: 0.72rem; 
+            font-weight: 600; 
+            opacity: 0.85; 
+            line-height: 1.3;
+        }
+
+        /* NAVIGATION ARROWS */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px; height: 48px;
+            background: rgba(17,17,17,0.42);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.22);
+            border-radius: 50%;
+            color: white;
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .nav-arrow.left  { left: 8px; }
+        .nav-arrow.right { right: 8px; }
+        .nav-arrow.disabled { opacity: 0; pointer-events: none; }
+
+        .tap-hint {
+            position: absolute;
+            bottom: 16px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="progress-container"></div>
+
+    <div class="slides-container">
+        
+        <div class="nav-arrow left" id="prevArrow">&#8249;</div>
+        <div class="nav-arrow right" id="nextArrow">&#8250;</div>
+
+        <div class="slide active">
+            <div class="slide-header">
+                <div class="roadmap">
+                    <span class="active">Daily</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Mon/Tue</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Wed/Thu</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Weekend</span>
+                </div>
+                <h1>The Deals Database</h1>
+                <p>The complete 2026 Burlington guide.</p>
+            </div>
+            
+            <div class="bento-grid">
+                <a href="https://docs.google.com/forms/d/1lZ4r_BPlvghVgxSg2ZrmktLWFRxjVxSxRVg3mzAxMCg/edit&sa=D&source=editors&ust=1768438160617974&usg=AOvVaw1qhFSBYczirWJ8_urcAN_h" target="_blank" class="card span-2 row-layout bg-yellow">
+                    <span class="emoji">📝</span>
+                    <div class="card-content">
+                        <h3>Submit a Deal</h3>
+                        <p>Got a hookup? Add it to the list here.</p>
+                    </div>
+                </a>
+
+                <a href="mailto:BtownBrief@gmail.com" class="card span-2 row-layout bg-dark">
+                    <span class="emoji">✉️</span>
+                    <div class="card-content">
+                        <h3>Update a Deal</h3>
+                        <p>Email BtownBrief@gmail.com if details changed.</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="day-header">🔄 Daily "Best Bets"</div>
+            <div class="pill-grid">
+                <div class="pill full-width">
+                    <span class="pill-handle">🍺 3 Needs</span>
+                    <span class="pill-desc">$1 Drafts (Mon–Sat, 4–6 PM)</span>
+                </div>
+                <div class="pill full-width">
+                    <span class="pill-handle">🦪 Bleu Northeast Kitchen</span>
+                    <span class="pill-desc">$1 Oysters (Daily, 5–6 PM)</span>
+                </div>
+                <div class="pill full-width">
+                    <span class="pill-handle">🍽️ Leunig's Bistro</span>
+                    <span class="pill-desc">2-course "Bistro Dinner" $26 (Daily, 3–5 PM & last hr)</span>
+                </div>
+                <div class="pill full-width">
+                    <span class="pill-handle">☕ Skinny Pancake</span>
+                    <span class="pill-desc">“Daily Driver” $10 Breakfast Sammy + drip coffee (M-F)</span>
+                </div>
+                <div class="pill full-width">
+                    <span class="pill-handle">🦪 Gold Restaurant</span>
+                    <span class="pill-desc">$1 Oysters (Tue/Wed/Fri/Sat 4:30–6 PM, Thu All Day)</span>
+                </div>
+                <div class="pill full-width">
+                    <span class="pill-handle">🍽️ Electra's (Shelburne)</span>
+                    <span class="pill-desc">$26 Prix Fixe Menu (Tue–Sat, 4:30–5:30 PM)</span>
+                </div>
+                <div class="pill full-width">
+                    <span class="pill-handle">🥨 VT Pub & Brewery</span>
+                    <span class="pill-desc">Reduced-price snack menu (Wed–Fri, 3–5 PM)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <div class="roadmap">
+                    <span>Daily</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span class="active">Mon/Tue</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Wed/Thu</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Weekend</span>
+                </div>
+                <h1>Early Week</h1>
+                <p>Monday & Tuesday specials.</p>
+            </div>
+
+            <div class="day-header">Monday</div>
+            <div class="pill-grid">
+                <div class="pill"><span class="pill-handle">🍔 Shelburne Tap</span><span class="pill-desc">½ off burgers</span></div>
+                <div class="pill"><span class="pill-handle">🥞 Skinny Pancake</span><span class="pill-desc">½ price burgers</span></div>
+                <div class="pill"><span class="pill-handle">🍗 RJ's</span><span class="pill-desc">86¢ wings + $5 burger w/ chips (4–8 PM)</span></div>
+                <div class="pill"><span class="pill-handle">🍗 Barnyard</span><span class="pill-desc">$0.75 wings</span></div>
+                <div class="pill"><span class="pill-handle">🧒 Bluebird BBQ</span><span class="pill-desc">Free kids’ meal</span></div>
+                <div class="pill"><span class="pill-handle">🍤 Onion City</span><span class="pill-desc">Extra Shrimp</span></div>
+                <div class="pill"><span class="pill-handle">🍽️ T. Ruggs</span><span class="pill-desc">Food Pop-up</span></div>
+                <div class="pill"><span class="pill-handle">🍽️ VT Pub</span><span class="pill-desc">25% off food for restaurant workers</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Black Flannel</span><span class="pill-desc">All draft full pours $5</span></div>
+                <div class="pill"><span class="pill-handle">🍺 BBCO</span><span class="pill-desc">$5 16oz Elaborate Metaphor</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Zero Gravity</span><span class="pill-desc">$3 Pints Green State</span></div>
+                <div class="pill"><span class="pill-handle">🍺 T. Ruggs</span><span class="pill-desc">$4 Zero Gravity Cans</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Barnyard</span><span class="pill-desc">$4 Stella Artois</span></div>
+                <div class="pill"><span class="pill-handle">🍷 Daily Planet</span><span class="pill-desc">Half-off Wine Bottles</span></div>
+                <div class="pill"><span class="pill-handle">🍺 El Gato Essex</span><span class="pill-desc">$5 Fiddlehead IPA</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Ken's Pizza</span><span class="pill-desc">$2 off Winter Cocktails</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Shelburne Tap</span><span class="pill-desc">$3 bottled beer</span></div>
+            </div>
+
+            <div class="day-header">Tuesday</div>
+            <div class="pill-grid">
+                <div class="pill"><span class="pill-handle">🌮 Rotisserie</span><span class="pill-desc">$3.95 Taco Tuesday</span></div>
+                <div class="pill"><span class="pill-handle">🌮 El Gato Essex</span><span class="pill-desc">$4 Tacos</span></div>
+                <div class="pill"><span class="pill-handle">🌮 Rozzi's</span><span class="pill-desc">$2 Tacos</span></div>
+                <div class="pill"><span class="pill-handle">🌮 Shelburne Tap</span><span class="pill-desc">$5 Tacos</span></div>
+                <div class="pill"><span class="pill-handle">🌮 BBCO</span><span class="pill-desc">$10 for 2 tacos + 16oz Kings Canyon</span></div>
+                <div class="pill"><span class="pill-handle">🌮 Ken's Pizza</span><span class="pill-desc">$2 off Tacos</span></div>
+                <div class="pill"><span class="pill-handle">🍝 Gold Rest.</span><span class="pill-desc">$12 Pasta</span></div>
+                <div class="pill"><span class="pill-handle">🍗 Follino's</span><span class="pill-desc">$1 Wings</span></div>
+                <div class="pill"><span class="pill-handle">🍔 4 Quarters</span><span class="pill-desc">$10 select burgers</span></div>
+                <div class="pill"><span class="pill-handle">🥞 Skinny Pancake</span><span class="pill-desc">BOGO crepes</span></div>
+                <div class="pill"><span class="pill-handle">🍗 BWW</span><span class="pill-desc">BOGO 50% off wings</span></div>
+                <div class="pill"><span class="pill-handle">🍰 Onion City</span><span class="pill-desc">BOGO Desserts</span></div>
+                <div class="pill"><span class="pill-handle">🧒 Moe’s</span><span class="pill-desc">Kids eat free (w/ adult)</span></div>
+                <div class="pill"><span class="pill-handle">🧒 Texas Roadhouse</span><span class="pill-desc">$1.99 kids’ meals</span></div>
+                <div class="pill"><span class="pill-handle">🍽️ VT Pub</span><span class="pill-desc">15% off with VT ID</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Black Flannel</span><span class="pill-desc">All draft full pours $5</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Daily Planet</span><span class="pill-desc">Half Price Cocktails</span></div>
+                <div class="pill"><span class="pill-handle">🍷 Barkeaters</span><span class="pill-desc">$5 wine glasses</span></div>
+                <div class="pill"><span class="pill-handle">🍷 Gold Rest.</span><span class="pill-desc">$8 Wine by glass</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Ken's Pizza</span><span class="pill-desc">$1 off Margaritas</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Last Stop</span><span class="pill-desc">$3.50 Twisted Tea</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Shelburne Tap</span><span class="pill-desc">$5 Margs</span></div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <div class="roadmap">
+                    <span>Daily</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Mon/Tue</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span class="active">Wed/Thu</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Weekend</span>
+                </div>
+                <h1>Mid Week</h1>
+                <p>Wednesday & Thursday specials.</p>
+            </div>
+
+            <div class="day-header">Wednesday</div>
+            <div class="pill-grid">
+                <div class="pill"><span class="pill-handle">🍔 Barkeaters</span><span class="pill-desc">$12 Burger + fries + beer</span></div>
+                <div class="pill"><span class="pill-handle">🍔 Switchback</span><span class="pill-desc">$10 Burger</span></div>
+                <div class="pill"><span class="pill-handle">🌭 Mule Bar</span><span class="pill-desc">$7 Deluxe Hotdog</span></div>
+                <div class="pill"><span class="pill-handle">🍕 Monkey House</span><span class="pill-desc">$2 cheese / $2.50 roni slices</span></div>
+                <div class="pill"><span class="pill-handle">🍣 City Market</span><span class="pill-desc">$6 select sushi rolls</span></div>
+                <div class="pill"><span class="pill-handle">🍕 Pizzeria Verità</span><span class="pill-desc">$5 off Margherita</span></div>
+                <div class="pill"><span class="pill-handle">🍔 Daily Planet</span><span class="pill-desc">$5 off burgers & sandwiches (5-9)</span></div>
+                <div class="pill"><span class="pill-handle">🍗 RJ's</span><span class="pill-desc">88¢ wings + $5 burger (4-8 PM)</span></div>
+                <div class="pill"><span class="pill-handle">🍗 The Spot</span><span class="pill-desc">50¢ wings</span></div>
+                <div class="pill"><span class="pill-handle">🍔 Rotisserie</span><span class="pill-desc">$5 sliders</span></div>
+                <div class="pill"><span class="pill-handle">🥗 Shelburne Tap</span><span class="pill-desc">BOGO ½ off salads</span></div>
+                <div class="pill"><span class="pill-handle">🍗 Onion City</span><span class="pill-desc">$5 off Fried Chicken Buckets</span></div>
+                <div class="pill"><span class="pill-handle">🍺 BBCO</span><span class="pill-desc">$5 Wizard Beers</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Zero Gravity</span><span class="pill-desc">$3 Conehead Pints</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Monkey House</span><span class="pill-desc">$5 Zero Gravity beer</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Gold Rest.</span><span class="pill-desc">½ priced house cocktails</span></div>
+                <div class="pill"><span class="pill-handle">🍹 El Gato Essex</span><span class="pill-desc">$5 Margaritas</span></div>
+                <div class="pill"><span class="pill-handle">🍷 Ken's Pizza</span><span class="pill-desc">$2 off Wine</span></div>
+                <div class="pill"><span class="pill-handle">🍷 Shelburne Tap</span><span class="pill-desc">$5 house wine</span></div>
+                <div class="pill full-width"><span class="pill-handle">🍷 Standing Stone</span><span class="pill-desc">10% off retail & $2 off wine by glass</span></div>
+            </div>
+
+            <div class="day-header">Thursday</div>
+            <div class="pill-grid">
+                <div class="pill full-width"><span class="pill-handle">🍕 American Flatbread</span><span class="pill-desc">$15 for two beers + large cheese pizza</span></div>
+                <div class="pill full-width"><span class="pill-handle">🍕 BBCO</span><span class="pill-desc">$10 for 2 slices pizza + Lighthouse Pilsner</span></div>
+                <div class="pill"><span class="pill-handle">🦪 Gold Rest.</span><span class="pill-desc">$1 Oysters all day</span></div>
+                <div class="pill"><span class="pill-handle">🍔 Rozzi's</span><span class="pill-desc">Bacon Burger, Fries, Pint $9.99</span></div>
+                <div class="pill"><span class="pill-handle">🍗 Switchback</span><span class="pill-desc">Half-price wings</span></div>
+                <div class="pill"><span class="pill-handle">🍗 Shelburne Tap</span><span class="pill-desc">$0.75 Wings</span></div>
+                <div class="pill"><span class="pill-handle">🍗 RJ's</span><span class="pill-desc">89¢ wings + $5 burger (4-8 PM)</span></div>
+                <div class="pill"><span class="pill-handle">🍗 BWW</span><span class="pill-desc">BOGO boneless wings</span></div>
+                <div class="pill"><span class="pill-handle">🧀 El Gato Essex</span><span class="pill-desc">Half Price Nachos</span></div>
+                <div class="pill"><span class="pill-handle">🦪 Onion City</span><span class="pill-desc">$5 off Mussels</span></div>
+                <div class="pill"><span class="pill-handle">🍔 Skinny Pancake</span><span class="pill-desc">½ price burgers</span></div>
+                <div class="pill"><span class="pill-handle">🍟 Kitchen Table</span><span class="pill-desc">Pub food specials</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Rí Rá Irish Pub</span><span class="pill-desc">$1 Beer</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Finnegan's</span><span class="pill-desc">$1 PBR</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Switchback</span><span class="pill-desc">$5 Mansfield IPA Pints</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Kitchen Table</span><span class="pill-desc">$5 drafts</span></div>
+                <div class="pill"><span class="pill-handle">🍸 Daily Planet</span><span class="pill-desc">$10 Martinis</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Church St Tav.</span><span class="pill-desc">$1 off Fiddlehead</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Ken's Pizza</span><span class="pill-desc">$2 off Local Drafts</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Shelburne Tap</span><span class="pill-desc">$3 PBR</span></div>
+                <div class="pill full-width"><span class="pill-handle">🍷 Standing Stone</span><span class="pill-desc">10% off retail & $2 off wine by glass</span></div>
+            </div>
+        </div>
+
+        <div class="slide">
+            <div class="slide-header">
+                <div class="roadmap">
+                    <span>Daily</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Mon/Tue</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span>Wed/Thu</span> <span class="roadmap-arrow">&rarr;</span> 
+                    <span class="active">Weekend</span>
+                </div>
+                <h1>The Weekend</h1>
+                <p>Friday, Saturday, and Sunday runs.</p>
+            </div>
+
+            <div class="day-header">Friday</div>
+            <div class="pill-grid">
+                <div class="pill"><span class="pill-handle">🦪 Hen of the Wood</span><span class="pill-desc">$2 Oysters (4–5 PM)</span></div>
+                <div class="pill"><span class="pill-handle">🐟 Shelburne Tap</span><span class="pill-desc">$12 fish & chips</span></div>
+                <div class="pill"><span class="pill-handle">🍗 RJ's</span><span class="pill-desc">90¢ wings + $5 burger w/ chips (4-8 PM)</span></div>
+                <div class="pill"><span class="pill-handle">🥡 Onion City</span><span class="pill-desc">$5 off takeout over $50</span></div>
+                <div class="pill full-width"><span class="pill-handle">🍺 Daily Planet</span><span class="pill-desc">$5 Fiddlehead IPA Pints, $5 Mimosa Pints</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Shelburne Tap</span><span class="pill-desc">$5 Fiddlehead drafts</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Rotisserie</span><span class="pill-desc">$3 Switchback Ale</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Halvorson's</span><span class="pill-desc">$5 Bloody Mary</span></div>
+                <div class="pill"><span class="pill-handle">🍸 Ken's Pizza</span><span class="pill-desc">$2 off Martinis</span></div>
+            </div>
+
+            <div class="day-header">Saturday</div>
+            <div class="pill-grid">
+                <div class="pill"><span class="pill-handle">🍗 Shelburne Tap</span><span class="pill-desc">BOGO ½ off chicken sandwich</span></div>
+                <div class="pill"><span class="pill-handle">🍗 RJ's</span><span class="pill-desc">91¢ wings + $5 burger (4-8 PM)</span></div>
+                <div class="pill"><span class="pill-handle">🥡 Onion City</span><span class="pill-desc">$5 off takeout over $50</span></div>
+                <div class="pill full-width"><span class="pill-handle">🍺 Church St. Tavern</span><span class="pill-desc">$5 Michelob Ultra draft, $5 Bud Light bottles</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Daily Planet</span><span class="pill-desc">$5 Mimosa Pints</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Halvorson's</span><span class="pill-desc">$5 Bloody Mary</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Shelburne Tap</span><span class="pill-desc">$5 Switchback drafts</span></div>
+            </div>
+
+            <div class="day-header">Sunday</div>
+            <div class="pill-grid">
+                <div class="pill"><span class="pill-handle">🍔 Guild Tavern</span><span class="pill-desc">$20 House Burger & Beer</span></div>
+                <div class="pill"><span class="pill-handle">🍔 May Day</span><span class="pill-desc">$10 Patty Melt</span></div>
+                <div class="pill"><span class="pill-handle">🍗 RJ's</span><span class="pill-desc">85¢ wings + $5 burger (4-8 PM)</span></div>
+                <div class="pill"><span class="pill-handle">🍗 Rotisserie</span><span class="pill-desc">$0.85 wings</span></div>
+                <div class="pill"><span class="pill-handle">🌭 Onion City</span><span class="pill-desc">$5 Hotdogs</span></div>
+                <div class="pill"><span class="pill-handle">🍔 McGillicuddy's</span><span class="pill-desc">½ Price Burgers</span></div>
+                <div class="pill full-width"><span class="pill-handle">🏈 99 Restaurants</span><span class="pill-desc">Football specials ($5.99 wings, $6.99 apps)</span></div>
+                <div class="pill"><span class="pill-handle">🍳 Shalimar</span><span class="pill-desc">Sunday Brunch Buffet ($14)</span></div>
+                <div class="pill"><span class="pill-handle">🎱 3 Needs</span><span class="pill-desc">Free Pool</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Daily Planet</span><span class="pill-desc">$5 Mimosa Pints</span></div>
+                <div class="pill"><span class="pill-handle">🍹 Halvorson's</span><span class="pill-desc">$5 Bloody Mary</span></div>
+                <div class="pill"><span class="pill-handle">🍺 Onion City</span><span class="pill-desc">$2 Lite Beers</span></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="tap-hint">Tap edges or swipe to navigate</div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const progressContainer = document.getElementById('progress-container');
+    for (let i = 0; i < totalSlides; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'progress-bar-wrapper';
+        const fill = document.createElement('div');
+        fill.className = 'progress-bar-fill';
+        wrapper.appendChild(fill);
+        progressContainer.appendChild(wrapper);
+    }
+    const progressBars = document.querySelectorAll('.progress-bar-wrapper');
+    const prevArrow = document.getElementById('prevArrow');
+    const nextArrow = document.getElementById('nextArrow');
+
+    function goTo(index) {
+        if (index < 0 || index >= totalSlides) return;
+        currentSlide = index;
+        updateUI();
+    }
+
+    function updateUI() {
+        slides.forEach((slide, i) => slide.classList.toggle('active', i === currentSlide));
+        progressBars.forEach((bar, i) => {
+            bar.querySelector('.progress-bar-fill').style.width = i <= currentSlide ? '100%' : '0%';
+        });
+        prevArrow.classList.toggle('disabled', currentSlide === 0);
+        nextArrow.classList.toggle('disabled', currentSlide === totalSlides - 1);
+    }
+
+    prevArrow.addEventListener('click', () => goTo(currentSlide - 1));
+    nextArrow.addEventListener('click', () => goTo(currentSlide + 1));
+
+    const appContainer = document.getElementById('app-container');
+    appContainer.addEventListener('click', e => {
+        if (e.target.closest('a') || e.target.closest('.nav-arrow')) return;
+        const rect = appContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if (x < rect.width * 0.3) goTo(currentSlide - 1);
+        else if (x > rect.width * 0.7) goTo(currentSlide + 1);
+    });
+
+    let startX = 0, startY = 0;
+    appContainer.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+    appContainer.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) > 50 && Math.abs(dy) < Math.abs(dx)) {
+            dx > 0 ? goTo(currentSlide - 1) : goTo(currentSlide + 1);
+        }
+    }, { passive: true });
+
+    updateUI();
+});
+</script>
+
+</body>
+</html>
